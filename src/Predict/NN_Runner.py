@@ -10,6 +10,13 @@ init()
 model = load_model('Models/NN_Models/Trained-Model-ML')
 ou_model = load_model("Models/NN_Models/Trained-Model-OU")
 
+def conversor_odds(oddsAmericanas):
+  oddsDecimal = 0
+  if oddsAmericanas > 0:
+    oddsDecimal = (oddsAmericanas / 100) + 1
+  elif oddsAmericanas < 0:
+    oddsDecimal = (-100 / oddsAmericanas) + 1
+  return round(oddsDecimal, 2)
 
 def nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds, under_odds, over_odds):
     ml_predictions_array = []
@@ -18,6 +25,12 @@ def nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_
         ml_predictions_array.append(model.predict(np.array([row])))
 
     frame_uo = copy.deepcopy(frame_ml)
+    limit = False
+    #modificar aqui para adicionar/remover total score para calcular as odds de limite do bet365
+    # limit = True
+    # for i in range(len(todays_games_uo)):
+    #   if todays_games_uo[i] != None:
+    #       todays_games_uo[i] += 8
     frame_uo['OU'] = np.asarray(todays_games_uo)
     data = frame_uo.values
     data = data.astype(float)
@@ -70,25 +83,27 @@ def nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_
         else:
           uo_string = "Over"
           uo_odds = over_odds[count]
+        if limit:
+          uo_odds = -233
         ev_home = ev_away = ev_uo = 0
         if home_team_odds[count] and away_team_odds[count] and todays_games_uo[count]:
           ev_home = float(Expected_Value.expected_value(ml_predictions_array[count][0][1], int(home_team_odds[count])))
           ev_away = float(Expected_Value.expected_value(ml_predictions_array[count][0][0], int(away_team_odds[count])))
           ev_uo = float(Expected_Value.expected_value(ou_predictions_array[count][0][under_over], int(uo_odds)))
         if ev_home > 0:
-            print(home_team + ' EV: ' + Fore.GREEN + str(ev_home) + Style.RESET_ALL)
+            print(home_team + ' (O.A.: ' + str(home_team_odds[count]) + ') (O.D.: ' + str(conversor_odds(home_team_odds[count])) + ') EV: ' + Fore.GREEN + str(ev_home) + Style.RESET_ALL)
         else:
-            print(home_team + ' EV: ' + Fore.RED + str(ev_home) + Style.RESET_ALL)
+            print(home_team + ' (O.A.: ' + str(home_team_odds[count]) + ') (O.D.: ' + str(conversor_odds(home_team_odds[count])) + ') EV: ' + Fore.RED + str(ev_home) + Style.RESET_ALL)
 
         if ev_away > 0:
-            print(away_team + ' EV: ' + Fore.GREEN + str(ev_away) + Style.RESET_ALL)
+            print(away_team + ' (O.A.: ' + str(away_team_odds[count]) + ') (O.D.: ' + str(conversor_odds(away_team_odds[count])) + ') EV: ' + Fore.GREEN + str(ev_away) + Style.RESET_ALL)
         else:
-            print(away_team + ' EV: ' + Fore.RED + str(ev_away) + Style.RESET_ALL)
+            print(away_team + ' (O.A.: ' + str(away_team_odds[count]) + ') (O.D.: ' + str(conversor_odds(away_team_odds[count])) + ') EV: ' + Fore.RED + str(ev_away) + Style.RESET_ALL)
             
         if ev_uo > 0:
-            print(uo_string + ' EV: ' + Fore.GREEN + str(ev_uo) + Style.RESET_ALL)
+            print(uo_string + ' (O.A.: ' + str(uo_odds) + ') (O.D.: ' + str(conversor_odds(uo_odds)) + ') EV: ' + Fore.GREEN + str(ev_uo) + Style.RESET_ALL)
         else:
-            print(uo_string + ' EV: ' + Fore.RED + str(ev_uo) + Style.RESET_ALL)
+            print(uo_string + ' (O.A.: ' + str(uo_odds) + ') (O.D.: ' + str(conversor_odds(uo_odds)) + ') EV: ' + Fore.RED + str(ev_uo) + Style.RESET_ALL)
         print("------------------------------------------------------")
         count += 1
 
