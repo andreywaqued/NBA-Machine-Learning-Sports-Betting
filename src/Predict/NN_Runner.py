@@ -11,7 +11,7 @@ model = load_model('Models/NN_Models/Trained-Model-ML')
 ou_model = load_model("Models/NN_Models/Trained-Model-OU")
 
 
-def nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds):
+def nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds, under_odds, over_odds):
     ml_predictions_array = []
 
     for row in data:
@@ -63,8 +63,18 @@ def nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_
     for game in games:
         home_team = game[0]
         away_team = game[1]
-        ev_home = float(Expected_Value.expected_value(ml_predictions_array[count][0][1], int(home_team_odds[count])))
-        ev_away = float(Expected_Value.expected_value(ml_predictions_array[count][0][0], int(away_team_odds[count])))
+        under_over = int(np.argmax(ou_predictions_array[count]))
+        if under_over == 0:
+          uo_string = "Under"
+          uo_odds = under_odds[count]
+        else:
+          uo_string = "Over"
+          uo_odds = over_odds[count]
+        ev_home = ev_away = ev_uo = 0
+        if home_team_odds[count] and away_team_odds[count] and todays_games_uo[count]:
+          ev_home = float(Expected_Value.expected_value(ml_predictions_array[count][0][1], int(home_team_odds[count])))
+          ev_away = float(Expected_Value.expected_value(ml_predictions_array[count][0][0], int(away_team_odds[count])))
+          ev_uo = float(Expected_Value.expected_value(ou_predictions_array[count][0][under_over], int(uo_odds)))
         if ev_home > 0:
             print(home_team + ' EV: ' + Fore.GREEN + str(ev_home) + Style.RESET_ALL)
         else:
@@ -74,6 +84,12 @@ def nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_
             print(away_team + ' EV: ' + Fore.GREEN + str(ev_away) + Style.RESET_ALL)
         else:
             print(away_team + ' EV: ' + Fore.RED + str(ev_away) + Style.RESET_ALL)
+            
+        if ev_uo > 0:
+            print(uo_string + ' EV: ' + Fore.GREEN + str(ev_uo) + Style.RESET_ALL)
+        else:
+            print(uo_string + ' EV: ' + Fore.RED + str(ev_uo) + Style.RESET_ALL)
+        print("------------------------------------------------------")
         count += 1
 
     deinit()

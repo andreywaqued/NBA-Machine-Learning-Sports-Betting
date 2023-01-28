@@ -12,13 +12,14 @@ class SbrOddsProvider:
         
        self.games = Scoreboard(sport="NBA").games
        self.sportsbook = sportsbook
+       print(self.games)
 
     
     def get_odds(self):
         """Function returning odds from Sbr server's json content
 
         Returns:
-            dictionary: [home_team_name + ':' + away_team_name: { home_team: money_line_odds, away_team: money_line_odds }, under_over_odds: val]
+            dictionary: [home_team_name + ':' + away_team_name: { home_team: money_line_odds, away_team: money_line_odds }, under_over_odds: {val, under_odds, over_odds}]
         """
         dict_res = {}
         for game in self.games:
@@ -26,7 +27,7 @@ class SbrOddsProvider:
             home_team_name = game['home_team'].replace("Los Angeles Clippers", "LA Clippers")
             away_team_name = game['away_team'].replace("Los Angeles Clippers", "LA Clippers")
             
-            money_line_home_value = money_line_away_value = totals_value = None
+            money_line_home_value = money_line_away_value = totals_value = under_odds = over_odds = None
 
             # Get money line bet values
             if self.sportsbook in game['home_ml']:
@@ -37,9 +38,16 @@ class SbrOddsProvider:
             # Get totals bet value
             if self.sportsbook in game['total']:
                 totals_value = game['total'][self.sportsbook]
+
+            # Get under/over bet value
+            if self.sportsbook in game['under_odds']:
+                under_odds = game['under_odds'][self.sportsbook]
+            if self.sportsbook in game['over_odds']:
+                over_odds = game['over_odds'][self.sportsbook]
+
             
             dict_res[home_team_name + ':' + away_team_name] =  { 
-                'under_over_odds': totals_value,
+                'under_over_odds': { 'total':totals_value, 'under':under_odds, 'over':over_odds },
                 home_team_name: { 'money_line_odds': money_line_home_value }, 
                 away_team_name: { 'money_line_odds': money_line_away_value }
             }
