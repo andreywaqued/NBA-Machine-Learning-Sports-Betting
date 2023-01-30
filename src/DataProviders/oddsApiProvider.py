@@ -53,4 +53,4 @@ class odds_api_provider:
 					# for odds in markets["outcomes"]:
 					#     print(odds)
 
-odds_api_provider().get_odds()
+#odds_api_provider().get_odds()
