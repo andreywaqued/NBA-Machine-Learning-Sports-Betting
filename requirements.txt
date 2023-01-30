@@ -9,3 +9,5 @@ numpy
 xgboost==1.4.2
 sbrscrape==0.0.2
 Flask==2.2.2
+xlsxwriter
+openpyxl
