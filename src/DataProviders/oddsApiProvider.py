@@ -7,7 +7,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Border, Side, Font, Alignment, PatternFill, numbers
 
 class odds_api_provider:
-	def __init__(self, sport='basketball_nba', regions='eu', markets='h2h,totals', odds_format='decimal', date_format='iso'):
+	def __init__(self, sport='basketball_nba', regions='eu', markets='h2h,totals', odds_format='american', date_format='iso'):
 		API_KEY = 'b44c22cbc286679ea1ff4759ec62497e'
 		SPORT = sport #'basketball_nba' # use the sport_key from the /sports endpoint below, or use 'upcoming' to see the next 8 games across all sports
 
@@ -42,15 +42,17 @@ class odds_api_provider:
 				if bookmaker["key"] == "pinnacle":
 					for markets in bookmaker["markets"]:
 						if markets["outcomes"][0]["name"] == "Over":
-							oddsDict[homeTeam + ":" + awayTeam].update({"under_over_odds" : {"total":markets["outcomes"][0]["point"], "under":markets["outcomes"][0]["price"], "over":markets["outcomes"][1]["price"]}})
+							oddsDict[homeTeam + ":" + awayTeam].update({"under_over_odds" : {"total":markets["outcomes"][0]["point"], "under":markets["outcomes"][1]["price"], "over":markets["outcomes"][0]["price"]}})
 							continue
 						else:
 							homeTeam = markets["outcomes"][0]["name"]
 							awayTeam = markets["outcomes"][1]["name"]
-							oddsDict[homeTeam + ":" + awayTeam] = {homeTeam : markets["outcomes"][0]["price"], awayTeam : markets["outcomes"][1]["price"]} #, "under_over_odds" : {"total" : total, "under": under_odds, "over": over_odds} 
+							oddsDict[homeTeam + ":" + awayTeam] = {homeTeam : {"money_line_odds" : markets["outcomes"][0]["price"]},
+																	awayTeam : {"money_line_odds" : markets["outcomes"][1]["price"]}} #, "under_over_odds" : {"total" : total, "under": under_odds, "over": over_odds} 
 						#print(oddsDict)
-		print(oddsDict)
+		#print(oddsDict)
+		return(oddsDict)
 					# for odds in markets["outcomes"]:
 					#     print(odds)
 
-#odds_api_provider().get_odds()
+print(odds_api_provider().get_odds())
